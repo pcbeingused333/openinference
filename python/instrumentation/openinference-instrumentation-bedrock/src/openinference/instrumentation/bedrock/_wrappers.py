@@ -433,7 +433,13 @@ class _InvokeModelWithResponseStream(_WithTracer):
             self._name,
             end_on_exit=False,
         ) as span:
-            response = wrapped(*args, **kwargs)
+            try:
+                response = wrapped(*args, **kwargs)
+            except Exception as e:
+                span.record_exception(e)
+                span.set_status(Status(StatusCode.ERROR, str(e)))
+                span.end()
+                raise
             self.handle_response(response, kwargs, span)
             return response
 
@@ -527,7 +533,13 @@ class _ConverseStream(_WithTracer):
             ),
             end_on_exit=False,
         ) as span:
-            response = wrapped(*args, **kwargs)
+            try:
+                response = wrapped(*args, **kwargs)
+            except Exception as e:
+                span.record_exception(e)
+                span.set_status(Status(StatusCode.ERROR, str(e)))
+                span.end()
+                raise
             self.handle_response(response, kwargs, span)
             return response
 
